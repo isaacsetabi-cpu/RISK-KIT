@@ -1,0 +1,143 @@
+fun is_older (x: int*int*int, y: int*int*int) =
+    let
+	val day_x = #1 x * 365 + #2 x * 12 + #3 x
+	val day_y = #1 y * 365 + #2 y * 12 + #3 y
+    in
+  	day_x < day_y
+    end
+
+fun number_in_month (dates: (int*int*int) list, m: int) =
+    if null dates
+    then 0
+    else if #2(hd dates) = m
+         then 1+number_in_month(tl(dates),m)
+    else number_in_month(tl(dates),m)
+	     
+fun number_in_months (dates: (int*int*int) list, m: int list) =
+    if null dates orelse null m
+    then 0
+    else number_in_month(dates,hd(m))+number_in_months(dates,tl(m))
+
+fun dates_in_month (dates: (int*int*int) list, m: int) =
+    if null dates
+    then []
+    else if #2(hd dates) = m
+         then hd(dates)::dates_in_month(tl(dates),m)
+    else dates_in_month(tl(dates),m)
+
+fun dates_in_months (dates: (int*int*int) list, m: int list) =
+    if null dates orelse null m
+    then []
+    else dates_in_month(dates,hd(m))@ dates_in_months(dates,tl(m))
+						     
+fun get_nth (x: string list, n: int) =
+    if n = 1
+    then hd(x)
+    else get_nth(tl(x),n-1)
+
+fun date_to_string (date: (int*int*int)) =
+    let
+	val months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
+    in
+	get_nth(months, #2 date)^" "^Int.toString(#3 date)^", "^Int.toString(#1 date)
+    end
+
+fun number_before_reaching_sum (sum: int, l: int list) =
+    if sum <= hd(l) orelse null l
+    then 0
+    else 1+number_before_reaching_sum(sum-hd(l),tl(l))
+
+fun what_month (day: int) =
+    let
+	val days_per_m = [31,28,31,30,31,30,31,31,30,31,30,31]
+    in
+	1+number_before_reaching_sum(day, days_per_m)
+    end
+
+fun month_range (day1: int, day2: int) =
+    if day1 > day2
+    then []
+    else
+	let
+	    val m1 = what_month(day1)
+	in
+	    m1::month_range(day1+1,day2)
+	end
+
+fun oldest (dates: (int*int*int) list) =
+    if null dates
+    then NONE
+    else 
+	 let
+	     val tl_oldest = oldest(tl(dates))   
+	     fun get_day(date: (int*int*int))=
+		 #1 date * 365 + #2 date * 12 + #3 date
+	 in
+	     if isSome tl_oldest andalso get_day(valOf tl_oldest) < get_day(hd dates)
+	     then tl_oldest
+             else SOME (hd dates)
+	 end
+
+fun check_exist (x:int, l:int list) =
+    if null l
+    then false
+    else if x = hd l
+	 then true
+         else check_exist(x,tl(l))
+
+fun rm_dup (l: int list) =
+    if null l
+    then []
+    else if check_exist(hd l, tl(l))
+	 then rm_dup(tl(l))
+	 else hd l::rm_dup(tl(l))		    
+    
+fun number_in_months_challenge (dates: (int*int*int) list, m: int list) =
+    if null dates orelse null m
+    then 0
+    else
+	let
+	    val m_nodup = rm_dup(m)
+	in	    
+	    number_in_month(dates,hd(m_nodup))+number_in_months(dates,tl(m_nodup))
+	end
+	    
+fun dates_in_months_challenge (dates: (int*int*int) list, m: int list) =
+    if null dates orelse null m
+    then []
+    else
+	let
+	    val m_nodup = rm_dup(m)
+	in
+	    
+	    dates_in_month(dates,hd(m_nodup))@ dates_in_months(dates,tl(m_nodup))
+	end
+
+fun reasonable_date (date: int*int*int) =
+    if #1 date <= 0 orelse #2 date < 1 orelse #2 date > 12 orelse #3 date < 1 orelse #3 date > 31
+    then false
+    else 
+	 let
+	    fun check_leap_year (y: int) =
+		let
+		    fun isDivisible (a: int, b: int) =
+			(a mod b) = 0
+		in
+		    isDivisible(y,4) andalso (not (isDivisible(y,100))) orelse isDivisible(y,400)
+		end
+            val days_per_m = [31,28,31,30,31,30,31,31,30,31,30,31]
+	    fun get_nth_month (x: int list, n: int) =
+		if n = 1
+		then hd(x)
+		else get_nth_month(tl(x),n-1)
+	    val max_day = get_nth_month(days_per_m,#2 date)
+	 in
+	    if #2 date = 2 andalso #3 date = 29 andalso check_leap_year(#1 date)
+	    then true
+	    else if #3 date > max_day
+		 then false
+	         else true
+	 end
+		
+	    
+		      
